@@ -100,7 +100,7 @@ form?.addEventListener('submit', event => {
     form.reportValidity();
     return;
   }
-  note.textContent = isEnglish ? 'Thank you! Your request is ready. Connect the form handler before publishing.' : 'Спасибо! Заявка подготовлена — подключите обработчик формы перед публикацией.';
+  note.textContent = isEnglish ? 'Thank you! We will get in touch shortly.' : 'Спасибо! Мы свяжемся с вами.';
   note.className = 'form-note is-success';
   form.reset();
 });
@@ -116,7 +116,7 @@ document.querySelector('#consult-form')?.addEventListener('submit', event => {
   const current = event.currentTarget;
   if (!current.checkValidity()) return current.reportValidity();
   current.reset();
-  current.insertAdjacentHTML('beforeend', `<small class="form-note is-success">${isEnglish ? 'Thank you! The form is ready; connect the handler before publishing.' : 'Спасибо! Форма подготовлена; подключите обработчик перед публикацией.'}</small>`);
+  current.insertAdjacentHTML('beforeend', `<small class="form-note is-success">${isEnglish ? 'Thank you! We will get in touch shortly.' : 'Спасибо! Мы свяжемся с вами.'}</small>`);
 });
 
 const backToTop = document.querySelector('.back-to-top');

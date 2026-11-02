@@ -858,3 +858,61 @@ html{scroll-padding-top:148px}
   .hero__slide{transition:none}
   .hero__arrow,.hero__dots button{transition:none}
 }
+
+/* Text-only service cards: the dark teal field previously on card 01. */
+.services__grid .service:not(.service--wide):not(.service--photo){
+  color:#fff;
+  background:
+    radial-gradient(70% 60% at 86% 16%, rgba(85,193,231,.38), transparent 52%),
+    linear-gradient(145deg, #0b2432 0%, #15586a 48%, #0f7f96 100%)
+}
+.services__grid .service:nth-child(3):not(.service--wide):not(.service--photo){
+  background:
+    radial-gradient(70% 60% at 12% 18%, rgba(85,193,231,.32), transparent 52%),
+    linear-gradient(155deg, #0c2a38 0%, #166072 50%, #0e7489 100%)
+}
+.services__grid .service:nth-child(4):not(.service--wide):not(.service--photo){
+  background:
+    radial-gradient(80% 70% at 100% 100%, rgba(85,193,231,.30), transparent 50%),
+    linear-gradient(165deg, #0b2432 0%, #145667 48%, #108199 100%)
+}
+.services__grid .service:not(.service--wide):not(.service--photo) .service__caption{
+  position:absolute;
+  inset:auto 25px 22px
+}
+.services__grid .service:not(.service--wide):not(.service--photo) h3{color:#fff}
+.services__grid .service:not(.service--wide):not(.service--photo) p{color:#e1e7e8}
+
+/* Restore the original sourcing photograph on the first card. */
+.service__image--sourcing{
+  background-image:image-set(url('images/sourcing.webp') type('image/webp'), url('images/sourcing.jpg') type('image/jpeg'));
+  background-position:center;
+  background-size:cover
+}
+
+/* Mobile: keep the truck in frame above the intro heading. */
+@media(max-width:800px){
+  .intro__photo{
+    min-height:min(78vw, 460px);
+    background-position:center 82%;
+    background-size:cover
+  }
+}
+
+/* Mobile: keep the hero title up top and drop the lead toward the footer, as on desktop. */
+@media(max-width:767px){
+  .hero .container.hero__content{
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-start;
+    top:var(--hero-top);
+    bottom:78px;
+    height:auto
+  }
+  .hero .hero__lead,
+  .hero .hero__lead--bright{
+    margin-top:auto;
+    margin-bottom:0;
+    max-width:100%
+  }
+}
