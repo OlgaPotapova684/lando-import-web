@@ -1,0 +1,7 @@
+.vercel
+.DS_Store
+**/.DS_Store
+images/originals/
+screenshots/
+vedem_postavku.jpg
+*.plist
