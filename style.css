@@ -798,13 +798,22 @@ html{scroll-padding-top:148px}
   .header .nav a{align-self:flex-start;font-size:20px}
   .header .header__cta{width:210px;min-width:210px}
   .hero .container.hero__content{
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-start;
     top:clamp(150px,17vw,170px);
     left:40px;
+    bottom:78px;
+    height:auto;
     width:min(600px,calc(100vw - 80px));
     max-width:600px
   }
   .hero h1,.hero h2,.hero .hero__slide:first-child h1{font-size:clamp(42px,5.9vw,48px)}
-  .hero .hero__lead,.hero .hero__lead--bright{font-size:17px}
+  .hero .hero__lead,.hero .hero__lead--bright{
+    margin-top:auto;
+    margin-bottom:0;
+    font-size:17px
+  }
 }
 
 @media(max-width:767px){
