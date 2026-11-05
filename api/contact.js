@@ -21,14 +21,21 @@ async function deliverTo(email, payload) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Accept: 'application/json'
+      Accept: 'application/json',
+      'User-Agent': 'Mozilla/5.0 LandoImportForm/1.0'
     },
     body: JSON.stringify(payload)
   });
-  const data = await response.json().catch(() => ({}));
+  const raw = await response.text();
+  let data = {};
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    data = { raw: raw.slice(0, 180) };
+  }
   const success = data.success === true || data.success === 'true';
   if (!response.ok || !success) {
-    throw new Error(data.message || `FormSubmit ${response.status}`);
+    throw new Error(data.message || data.raw || `FormSubmit ${response.status}`);
   }
   return data;
 }
@@ -69,7 +76,8 @@ module.exports = async function handler(req, res) {
 
   const results = await Promise.allSettled(RECIPIENTS.map(recipient => deliverTo(recipient, payload)));
   if (!results.some(result => result.status === 'fulfilled')) {
-    return res.status(502).json({ ok: false });
+    const error = results.find(result => result.status === 'rejected')?.reason;
+    return res.status(502).json({ ok: false, error: error?.message || 'deliver' });
   }
   return res.status(200).json({ ok: true });
 };
