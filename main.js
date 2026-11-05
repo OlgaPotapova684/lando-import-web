@@ -104,40 +104,28 @@ function setNote(current, type, message) {
   note.textContent = message;
 }
 
-async function postJson(url, payload) {
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json'
-    },
-    body: JSON.stringify(payload)
-  });
-  const data = await response.json().catch(() => ({}));
-  const ok = response.ok && data.ok !== false && data.success !== false && data.success !== 'false';
-  return { ok, status: response.status, data };
+function openMailClient(payload) {
+  const lines = [
+    payload.source,
+    '',
+    `${isEnglish ? 'Name' : 'Имя'}: ${payload.name}`,
+    `${isEnglish ? 'Phone' : 'Телефон'}: ${payload.phone}`
+  ];
+  if (payload.email) lines.push(`Email: ${payload.email}`);
+  if (payload.route) lines.push(`${isEnglish ? 'Route' : 'Маршрут'}: ${payload.route}`);
+  if (payload.page) lines.push(`${isEnglish ? 'Page' : 'Страница'}: ${payload.page}`);
+
+  const href = `mailto:${FORM_RECIPIENTS[0]}?cc=${encodeURIComponent(FORM_RECIPIENTS[1])}&subject=${encodeURIComponent(payload._subject)}&body=${encodeURIComponent(lines.join('\n'))}`;
+  const link = document.createElement('a');
+  link.href = href;
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
 }
 
 async function sendSubmission(payload) {
-  try {
-    const api = await postJson('/api/contact', payload);
-    if (api.ok) return;
-    if (api.status === 400) throw new Error('api');
-  } catch (error) {
-    if (error.message === 'api') throw error;
-  }
-
-  const { company_url: honey, ...fields } = payload;
-  const mail = {
-    ...fields,
-    _template: 'table',
-    _captcha: 'false',
-    _honey: honey || ''
-  };
-  const results = await Promise.allSettled(
-    FORM_RECIPIENTS.map(email => postJson(`https://formsubmit.co/ajax/${encodeURIComponent(email)}`, mail))
-  );
-  if (!results.some(result => result.status === 'fulfilled' && result.value.ok)) throw new Error('send');
+  openMailClient(payload);
 }
 
 function bindForm(current, buildPayload) {
@@ -159,15 +147,18 @@ function bindForm(current, buildPayload) {
 
     const button = current.querySelector('[type="submit"]');
     if (button) button.disabled = true;
-    setNote(current, 'pending', copy('Отправляем заявку…', 'Sending your request…'));
+    setNote(current, 'pending', copy('Открываем письмо…', 'Opening your email app…'));
     try {
       await sendSubmission(payload);
-      setNote(current, 'success', copy('Спасибо! Мы свяжемся с вами.', 'Thank you! We will get in touch shortly.'));
+      setNote(current, 'success', copy(
+        'Проверьте почтовую программу и нажмите «Отправить» — заявка уйдёт на sale@lando-import.ru и info@lando-import.ru.',
+        'Check your email app and send the message — it will go to sale@lando-import.ru and info@lando-import.ru.'
+      ));
       current.reset();
     } catch {
       setNote(current, 'error', copy(
-        'Не удалось отправить заявку. Напишите на sale@lando-import.ru или info@lando-import.ru.',
-        'Could not send the request. Please email sale@lando-import.ru or info@lando-import.ru.'
+        'Не удалось открыть почтовую программу. Напишите на sale@lando-import.ru или info@lando-import.ru.',
+        'Could not open your email app. Please write to sale@lando-import.ru or info@lando-import.ru.'
       ));
     } finally {
       if (button) button.disabled = false;
