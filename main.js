@@ -90,34 +90,116 @@ ensureHeroImage(slides[0]);
 ensureHeroImage(slides[1]);
 startSlider();
 
+const FORM_RECIPIENTS = ['sale@lando-import.ru', 'info@lando-import.ru'];
 const form = document.querySelector('#request-form');
-form?.addEventListener('submit', event => {
-  event.preventDefault();
-  const note = form.querySelector('.form-note');
-  if (!form.checkValidity()) {
-    note.textContent = isEnglish ? 'Please complete all form fields.' : 'Заполните, пожалуйста, все поля формы.';
-    note.className = 'form-note is-error';
-    form.reportValidity();
-    return;
+
+function copy(ru, en) {
+  return isEnglish ? en : ru;
+}
+
+function setNote(current, type, message) {
+  const note = current.querySelector('.form-note');
+  if (!note) return;
+  note.className = type ? `form-note is-${type}` : 'form-note';
+  note.textContent = message;
+}
+
+async function postJson(url, payload) {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+  const data = await response.json().catch(() => ({}));
+  const ok = response.ok && data.ok !== false && data.success !== false && data.success !== 'false';
+  return { ok, status: response.status, data };
+}
+
+async function sendSubmission(payload) {
+  try {
+    const api = await postJson('/api/contact', payload);
+    if (api.ok) return;
+    if (api.status === 400) throw new Error('api');
+  } catch (error) {
+    if (error.message === 'api') throw error;
   }
-  note.textContent = isEnglish ? 'Thank you! We will get in touch shortly.' : 'Спасибо! Мы свяжемся с вами.';
-  note.className = 'form-note is-success';
-  form.reset();
-});
+
+  const { company_url: honey, ...fields } = payload;
+  const mail = {
+    ...fields,
+    _template: 'table',
+    _captcha: 'false',
+    _honey: honey || ''
+  };
+  const results = await Promise.allSettled(
+    FORM_RECIPIENTS.map(email => postJson(`https://formsubmit.co/ajax/${encodeURIComponent(email)}`, mail))
+  );
+  if (!results.some(result => result.status === 'fulfilled' && result.value.ok)) throw new Error('send');
+}
+
+function bindForm(current, buildPayload) {
+  if (!current) return;
+  current.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (!current.checkValidity()) {
+      setNote(current, 'error', copy('Заполните, пожалуйста, все поля формы.', 'Please complete all form fields.'));
+      current.reportValidity();
+      return;
+    }
+
+    const payload = buildPayload(new FormData(current));
+    if (payload.company_url) {
+      setNote(current, 'success', copy('Спасибо! Мы свяжемся с вами.', 'Thank you! We will get in touch shortly.'));
+      current.reset();
+      return;
+    }
+
+    const button = current.querySelector('[type="submit"]');
+    if (button) button.disabled = true;
+    setNote(current, 'pending', copy('Отправляем заявку…', 'Sending your request…'));
+    try {
+      await sendSubmission(payload);
+      setNote(current, 'success', copy('Спасибо! Мы свяжемся с вами.', 'Thank you! We will get in touch shortly.'));
+      current.reset();
+    } catch {
+      setNote(current, 'error', copy(
+        'Не удалось отправить заявку. Напишите на sale@lando-import.ru или info@lando-import.ru.',
+        'Could not send the request. Please email sale@lando-import.ru or info@lando-import.ru.'
+      ));
+    } finally {
+      if (button) button.disabled = false;
+    }
+  });
+}
+
+bindForm(form, data => ({
+  source: isEnglish ? 'Route calculation request' : 'Заявка на расчёт маршрута',
+  name: String(data.get('name') || '').trim(),
+  phone: String(data.get('phone') || '').trim(),
+  route: String(data.get('route') || '').trim(),
+  company_url: String(data.get('company_url') || '').trim(),
+  page: window.location.href,
+  _subject: isEnglish ? 'Lando Import: route calculation request' : 'Ландо Импорт: заявка на расчёт маршрута'
+}));
+
+bindForm(document.querySelector('#consult-form'), data => ({
+  source: isEnglish ? 'Consultation request' : 'Форма консультации',
+  name: String(data.get('consult-name') || '').trim(),
+  email: String(data.get('consult-email') || '').trim(),
+  phone: String(data.get('consult-phone') || '').trim(),
+  company_url: String(data.get('company_url') || '').trim(),
+  page: window.location.href,
+  _subject: isEnglish ? 'Lando Import: consultation request' : 'Ландо Импорт: заявка на консультацию'
+}));
 
 document.querySelectorAll('[data-delivery]').forEach(button => button.addEventListener('click', () => {
   const route = form?.querySelector('[name="route"]');
   if (route) route.value = isEnglish ? `Shipping method: ${button.dataset.delivery}. ` : `Вид доставки: ${button.dataset.delivery}. `;
   scrollToAnchor('#request');
 }));
-
-document.querySelector('#consult-form')?.addEventListener('submit', event => {
-  event.preventDefault();
-  const current = event.currentTarget;
-  if (!current.checkValidity()) return current.reportValidity();
-  current.reset();
-  current.insertAdjacentHTML('beforeend', `<small class="form-note is-success">${isEnglish ? 'Thank you! We will get in touch shortly.' : 'Спасибо! Мы свяжемся с вами.'}</small>`);
-});
 
 const backToTop = document.querySelector('.back-to-top');
 function updateBackToTop() {

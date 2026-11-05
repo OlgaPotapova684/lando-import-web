@@ -501,7 +501,12 @@ html{scroll-padding-top:148px}
 .consent-field a,.form-privacy a{color:#006f89;text-decoration:underline;text-underline-offset:2px}
 .form-privacy{grid-column:1/-1;color:#526870!important;font-size:11px!important;line-height:1.45}
 .consult .form-privacy{margin-top:-10px}
-.request .form-note:empty{display:none}
+.hp{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.consult form,.request form{position:relative}
+.consult .form-note,.request .form-note{grid-column:1/-1}
+.consult .form-note:empty,.request .form-note:empty{display:none}
+.form-note.is-pending{color:#36515c;font-weight:500}
+form .button:disabled{opacity:.65;cursor:wait}
 .footer__in{grid-template-columns:auto 1fr;row-gap:24px}
 .footer__company{display:grid;gap:5px}
 .footer__company p{color:#fff;font-weight:600}
